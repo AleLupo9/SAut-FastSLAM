@@ -4,6 +4,7 @@ import random
 import matplotlib.pyplot as plt
 import scipy.linalg as expm
 import rosbag # Assuming we have rosbag installed
+#modify??
 
 global precision, base_weight
 precision = 0.001
