@@ -4,7 +4,6 @@ import random
 import matplotlib.pyplot as plt
 import scipy.linalg as expm
 import rosbag # Assuming we have rosbag installed
-#modify??
 
 global precision, base_weight
 precision = 0.001
@@ -69,7 +68,8 @@ def measurement_model(z,x):
     #Return the expected measurement to be used in EKF update probably
     return()
 
-def initialize_lndmrk(particle, landmark_id, z, err):
+
+def initialize_lndmrk(particle, z, err):
     mu = inverse_movement(particle, z)
     H = jacobian(mu[1]-particle['pose'][1], mu[2]-particle['pose'][2], particle['pose'][3])
     Q = np.eye(2)*err
@@ -77,7 +77,8 @@ def initialize_lndmrk(particle, landmark_id, z, err):
     w = base_weight
     return mu, var, w
     
-def update_lndmrk(particle, landmark_id, z, err)
+
+def update_lndmrk(particle, landmark_id, z, err):
     mu_old = particle['landmarks'][landmark_id]['mu']
     sigma_old = particle['landmarks'][landmark_id]['sigma']
     x = particle['pose']
@@ -87,7 +88,8 @@ def update_lndmrk(particle, landmark_id, z, err)
     K = sigma_old@np.transpose(H)@np.linalg.inv(Q)
     mu = mu_old + K*(z-z_hat)
     sigma = (np.eye(2)-K@H)*sigma_old
-    w = np.linalg.matrix_power(np.abs(2*math.pi*Q), -0.5)
+    w = np.linalg.matrix_power(np.abs(2*math.pi*Q), -0.5)*expm(-0.5*np.transpose(z-z_hat)@Q@(z-z_hat))
+    return mu, sigma, w
 
 
 def is_landmark_seen(particle, landmark_id):
