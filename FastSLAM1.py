@@ -120,7 +120,7 @@ def fastslam_kc(ParticleSet,measurements):
             landmark_id=measurements[i][0]
             
     
-    return ParticleSet, pose,landmarks #for each t
+    return ParticleSet, pose, landmarks #for each t
 
 #Some parameters to define, such as timestep, linear_vel and angular_vel
 dt=0.1 #(s)
