@@ -3,6 +3,7 @@ from numpy import pi
 from math import cos, sin, tan, atan2, sqrt, pow
 import matplotlib.pyplot as plt
 import json
+from celluloid import Camera
 
 def deviation(angle):
     if angle == pi/2 or angle == 2*pi-pi/2:
@@ -54,8 +55,8 @@ for i in range(n_land):
 #plt.show()
 # robot = [x, y, theta]
 """
-
-robot = [2, 0, pi/2]
+"""
+robot = [0, 2, pi]
 
 mu_xy = 0
 sigma_xy = 0.05
@@ -72,11 +73,11 @@ plt.show()
 
 
 """
-n_turns = 5
-max_t = 20
+n_turns = 20
+turn_t = 50
 r_r = 2
-a_vel = 2*n_turns*pi/max_t
-dt = 0.2
+a_vel = 2*pi/turn_t
+dt = 1
 max_reach = 2
 mu_xy = 0
 sigma_xy = 0
@@ -86,7 +87,12 @@ robot = [r_r, 0, 0]
 a_abs = atan2(robot[1], robot[0])
 robot[2] = a_abs + pi/2
 
-for co in range(int(max_t/dt)):
+fig, ax = plt.subplots()
+camera = Camera(fig)
+
+for co in range(int(turn_t*n_turns/dt)):
+    xp = []
+    yp = []
     # scan
     # f.write("obs:"+str(co+1)+"\ntime:"+str((co+1)*dt)+"\n")
     data["obs"+str(co)] = {"time": (co+1)*dt}
@@ -97,10 +103,16 @@ for co in range(int(max_t/dt)):
             y_rel = land_list[i][1]-robot[1]
             dist = sqrt(pow(x_rel, 2)+pow(y_rel, 2))
             if dist < max_reach:
-                corr_x = x_rel+np.random.normal(mu_xy,sigma_xy)
-                corr_y = y_rel+np.random.normal(mu_xy,sigma_xy)
+                angle = atan2(y_rel, x_rel)-robot[2]+pi/2
+                x_oriented = dist*cos(angle)
+                y_oriented = dist*sin(angle)
+                corr_x = x_oriented+np.random.normal(mu_xy,sigma_xy)
+                corr_y = y_oriented+np.random.normal(mu_xy,sigma_xy)
                 # f.write("id:"+str(i)+"\nx:"+str(corr_x)+"\ny:"+str(corr_y)+"\nerr:"+str(sigma_xy)+"\n")
                 data["obs"+str(co)]["land"+str(co2)] = {"id": i, "x": corr_x, "y": corr_y, "err": sigma_xy}
+                
+                xp.append(corr_x) # land_list[i][0])
+                yp.append(corr_y) # land_list[i][1])
                 co2 += 1
     # f.write("\n")
 
@@ -112,8 +124,13 @@ for co in range(int(max_t/dt)):
     robot[1] = r_r*sin(a_abs)
     robot[2] = a_abs + pi/2
 
+    ax.scatter(0, 0, c='red')
+    ax.scatter(xp, yp, c='blue')
+    camera.snap()
+
 # f.close()
 with open("simulation.json", "w") as file_json:
     json.dump(data, file_json)
 
-"""
+animation = camera.animate(interval=dt*100)  # Intervallo di tempo tra i frame (in millisecondi)
+plt.show()

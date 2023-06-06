@@ -10,12 +10,15 @@ def motion_model(particle):
     global linear_vel
     global angular_vel
     #Define noise
+    per_xy = 0
+    per_theta = 0
     mu_xy=0
-    sigma_xy=0
+    sigma_x=abs(linear_vel*dt*per_xy)
+    sigma_y=abs(linear_vel*dt*per_xy)
     mu_theta=0
-    sigma_theta=0
-    noise_x = np.random.normal(mu_xy,sigma_xy)
-    noise_y = np.random.normal(mu_xy,sigma_xy)
+    sigma_theta=abs(angular_vel*dt*per_theta)
+    noise_x = np.random.normal(mu_xy,sigma_x)
+    noise_y = np.random.normal(mu_xy,sigma_y)
     noise_theta=np.random.normal(mu_theta,sigma_theta)
     #Define the matrices for motion model
     matrixA=np.array([[1,0,0],
@@ -234,24 +237,24 @@ def plot_robot_pose_and_landmarks(robot_positions, landmarks_pose):
     plt.clf()
 
 #Some parameters to define, such as timestep, linear_vel and angular_vel
-n_turns = 1
+n_turns = 20
 r = 2
-tot_time = 20
-angular_vel=2*math.pi/tot_time
+turn_t = 50
+angular_vel=2*math.pi/turn_t
 linear_vel=r*math.sqrt(2*(1-math.cos(angular_vel*0.1)))/0.1
-precision=0.001
+precision=0.01
 err=0.05
 
 #Define the range for each dimension
-x_min=0
+x_min=-0
 x_max=0
-y_min=0
+y_min=-0
 y_max=0
-theta_min=math.pi/2
-theta_max=math.pi/2
+theta_min=0 # math.pi/2-math.pi/12
+theta_max=0 #math.pi/2+math.pi/12
 
 #Initiate the ParticleSet:
-num_particles=10
+num_particles=50
 base_weight=1/num_particles
 #num_landmarks=5 #Put here the number of the landmarks. We should know their id and it should be by order.
 ParticleSet=[] #Holds each particle. Each particle is a dictionary that should have 'pose' and 'landmarks'.
@@ -287,7 +290,7 @@ for i in range(len(data)):
     measurements=[]
 
     if old_time == -1:
-        dt = 0.1
+        dt = 1
     else:
         current_time = data["obs"+str(i)]["time"]
         dt = current_time-old_time
