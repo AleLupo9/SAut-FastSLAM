@@ -39,7 +39,7 @@ def cone_detection(land, angle, pos):
 
 cone_angle = pi/3
 n_land = 30
-r_l = 2.2
+r_l = 4
 land_list = []
 # landmark = x, y
 # land_list[id][coord]
@@ -73,12 +73,12 @@ plt.show()
 
 
 """
-n_turns = 20
-turn_t = 50
-r_r = 2
+n_turns = 2
+turn_t = 30
+r_r = 3
 a_vel = 2*pi/turn_t
-dt = 1
-max_reach = 2
+dt = 0.1
+max_reach = 3
 mu_xy = 0
 sigma_xy = 0
 data = {}

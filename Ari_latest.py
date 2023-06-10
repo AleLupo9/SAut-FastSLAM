@@ -72,8 +72,6 @@ def ideal_motion(ideal_position):
 def pi_2_pi(angle):
     return (angle + math.pi) % (2 * math.pi) - math.pi
 
-
-
 def h_inverse(particle,z):
     alpha=z[2]
     d=z[1]
@@ -103,7 +101,6 @@ def jacobian(x,y,theta,mu_x,mu_y):
                [-dy/pow(d,2),dx/pow(d,2)]])
     
     return H
-
 
 def is_landmark_seen(particle, landmark_id):
     landmarks = particle['landmarks']
@@ -153,7 +150,7 @@ def update_landmark(particle, landmark_id, z, err):
     # print(f"NEW WEIGHT {new_weight} {Qdet} {z_deviation} {Q}")
 
     #Apply the new values to the respective landmark and the new weight to the particle
-    particle['weight'] = new_weight
+    particle['weight'] += new_weight
     particle['landmarks'][index]['mu']=mu_new
     particle['landmarks'][index]['sigma']=sigma_new
 
@@ -230,9 +227,6 @@ def find_sigma(ParticleSet,weights, n_land):
 
     return weighted_sigma
 
-
-
-
 def retrieve_landmark_positions(ParticleSet,weights):
     num_landmarks=len(ParticleSet[0]['landmarks']) #Every particle has ALWAYS the same number of landmarks
     landmark_positions=[[] for _ in range(num_landmarks)] #Creates a list of empty lists. Each of these lists correspond to a landmark
@@ -258,6 +252,7 @@ def fastslam_kc(ParticleSet,num_particles,measurements):
         ParticleSet[k]=motion_model(ParticleSet[k])
         #Loop in the number of observations done in each instant 
         #(there might be a possibility that the robot does multiple observations at the same instant)
+        ParticleSet[k]['weight']=0
         for i in range(len(measurements)):
             landmark_id=measurements[i][0]
             #See if landmark as been seen
@@ -304,8 +299,6 @@ def plot_robot_pose_and_landmarks(robot_positions, landmarks_pose):
     plt.savefig('SLAM.png')
     plt.clf()
 
- 
-
 def plot_particles(Particle_Set, robot_position, ax, camera):
     
     x_particles=[particle['pose'][0] for particle in ParticleSet]
@@ -345,9 +338,6 @@ def plot_confidence_ellipse(ax, landmark_position, landmark_cov, n_std=1.0):
 
     ellipse.set_transform(transf + ax.transData)
     return ax.add_patch(ellipse)    
-    
-    
-    
     
 def plot_poses_and_ellipses(landmarks_position, robot_positions, ParticleSet, ideal_positions, noisy_positions):
     fig, ax = plt.subplots()
@@ -395,16 +385,8 @@ def plot_poses_and_ellipses(landmarks_position, robot_positions, ParticleSet, id
     plt.savefig('SLAM_Ellipses.png')
     plt.clf()
 
-    
-    
-    
-    
-    
-    
-    
-    
 #Some parameters to define, such as timestep, linear_vel and angular_vel
-n_turns = 1
+n_turns = 2
 r = 3
 turn_t = 30
 angular_vel=2*math.pi/turn_t
@@ -421,7 +403,7 @@ theta_min=0 # math.pi/2-math.pi/12
 theta_max=0 #math.pi/2+math.pi/12
 
 #Initiate the ParticleSet:
-num_particles=100
+num_particles=1000
 base_weight=1/num_particles
 #num_landmarks=5 #Put here the number of the landmarks. We should know their id and it should be by order.
 ParticleSet=[] #Holds each particle. Each particle is a dictionary that should have 'pose' and 'landmarks'.
