@@ -150,7 +150,10 @@ def update_landmark(particle, landmark_id, z, err):
     # print(f"NEW WEIGHT {new_weight} {Qdet} {z_deviation} {Q}")
 
     #Apply the new values to the respective landmark and the new weight to the particle
-    particle['weight'] += new_weight
+    if particle['weight'] == base_weight:
+        particle['weight'] = new_weight
+    else:
+        particle['weight'] += new_weight
     particle['landmarks'][index]['mu']=mu_new
     particle['landmarks'][index]['sigma']=sigma_new
 
