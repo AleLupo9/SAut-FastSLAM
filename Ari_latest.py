@@ -75,7 +75,7 @@ def pi_2_pi(angle):
 def h_inverse(particle,z):
     alpha=z[2]
     d=z[1]
-    angle=pi_2_pi(alpha + particle['pose'][2])
+    angle=pi_2_pi(alpha + particle['pose'][2] - math.pi/2)
     mu_x=particle['pose'][0] + d*math.cos(angle)
     mu_y=particle['pose'][1] + d*math.sin(angle)
     return mu_x, mu_y
@@ -85,7 +85,7 @@ def h_function(x,y,theta,mu_x,mu_y):
     dx=mu_x-x
     dy=mu_y-y
     d=math.sqrt(dx**2+dy**2)
-    thet=pi_2_pi(-theta + math.atan2(dy,dx))
+    thet=pi_2_pi(-theta + math.pi/2 + math.atan2(dy,dx))
     meas=np.array([d,thet])
     return meas
 
@@ -137,7 +137,7 @@ def update_landmark(particle, landmark_id, z, err):
     Q=H @ sigma_old @ np.transpose(H) + np.eye(2)*err
     K= sigma_old @ np.transpose(H) @ np.linalg.inv(Q)
     # print(K)
-    #Create array (our z contains (id,d, theta) whereas our z_hat contains (d,theta))
+    #Create array (our z contains (id,d, alpha) whereas our z_hat contains (d,alpha))
     z_deviation=np.array([z[1]-z_hat[0],z[2]-z_hat[1]])
     z_deviation[1]=pi_2_pi(z_deviation[1])
     #print(z_deviation)
@@ -484,7 +484,7 @@ for i in range(len(data)):
         translation_x = data["obs"+str(i)]["land"+str(j)]["x"]
         translation_y = data["obs"+str(i)]["land"+str(j)]["y"]
         d=math.sqrt(translation_x**2+translation_y**2)
-        theta=pi_2_pi( - math.atan2(translation_y,translation_x))
+        theta=pi_2_pi( math.atan2(translation_y,translation_x))
         
         #Add the landmark measurements to a variable. In this case we are not discarding the possibility of the robot detecting more than one aruco marker
         measurements.append([fiducial_id,d,theta])
