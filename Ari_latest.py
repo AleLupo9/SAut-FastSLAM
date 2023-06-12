@@ -255,7 +255,6 @@ def fastslam_kc(ParticleSet,num_particles,measurements):
         ParticleSet[k]=motion_model(ParticleSet[k])
         #Loop in the number of observations done in each instant 
         #(there might be a possibility that the robot does multiple observations at the same instant)
-        ParticleSet[k]['weight']=1
         for i in range(len(measurements)):
             landmark_id=measurements[i][0]
             #See if landmark as been seen
@@ -404,7 +403,7 @@ def RSME_graphs(RSME_odom_list, RSME_slam_list,n_instances):
     plt.clf()
 
 #Some parameters to define, such as timestep, linear_vel and angular_vel
-n_turns = 1
+n_turns = 10
 r = 3
 turn_t = 30
 angular_vel=2*math.pi/turn_t
