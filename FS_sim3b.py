@@ -7,7 +7,7 @@ import matplotlib.transforms as transforms
 import json
 from celluloid import Camera
 
-def motion_model(particle):
+def motion_model(particle, sopp):
     #Implement the motion model to predict next position
     #We will assume a constant velocity + noise approach
     global linear_vel
@@ -15,6 +15,12 @@ def motion_model(particle):
     #Define noise
     per_xy = 0.3
     per_theta = 0.3
+    if sopp == 0:
+        per_xy *= 1
+        per_theta *= 1
+    else:
+        per_xy *= 0.1
+        per_theta *= 0.1
     mu_xy=0
     sigma_x=abs(linear_vel*dt*per_xy)
     sigma_y=abs(linear_vel*dt*per_xy)
@@ -33,7 +39,10 @@ def motion_model(particle):
     arrayNoise=np.array([noise_x,noise_y,noise_theta])
     #Update the new position
     pose_array=np.array(particle['pose'])#Turns the pose of the particle into an array for matrix multiplication
-    new_pose= matrixA @ pose_array + arrayB + arrayNoise
+    if sopp == 0:
+        new_pose= matrixA @ pose_array + arrayB + arrayNoise
+    else:
+        new_pose= matrixA @ pose_array + arrayNoise
     x,y,theta = new_pose
     particle['pose'] = [x,y,theta]
     #Return the new particle with the new 'pose'
@@ -150,7 +159,7 @@ def update_landmark(particle, landmark_id, z, err):
     # print(f"NEW WEIGHT {new_weight} {Qdet} {z_deviation} {Q}")
 
     #Apply the new values to the respective landmark and the new weight to the particle
-    particle['weight'] *= new_weight
+    particle['weight'] = new_weight
     particle['landmarks'][index]['mu']=mu_new
     particle['landmarks'][index]['sigma']=sigma_new
 
@@ -247,13 +256,15 @@ def retrieve_landmark_positions(ParticleSet,weights):
 
 
 def fastslam_kc(ParticleSet,num_particles,measurements):
-    for k in range(num_particles):
+    for i in range(len(measurements)):
         #Sample new pose -> Motion Model
-        ParticleSet[k]=motion_model(ParticleSet[k])
         #Loop in the number of observations done in each instant 
         #(there might be a possibility that the robot does multiple observations at the same instant)
-        ParticleSet[k]['weight']=1
-        for i in range(len(measurements)):
+        for k in range(num_particles):
+            if i != 0:
+                ParticleSet[k]=motion_model(ParticleSet[k], 0)
+            else:
+                ParticleSet[k]=motion_model(ParticleSet[k], 1)
             landmark_id=measurements[i][0]
             #See if landmark as been seen
             if not is_landmark_seen(ParticleSet[k],landmark_id):
@@ -263,6 +274,10 @@ def fastslam_kc(ParticleSet,num_particles,measurements):
                 ParticleSet[k]['weight'] = base_weight
             else:
                 ParticleSet[k]=update_landmark(ParticleSet[k],landmark_id,measurements[i],err)
+
+        if i != len(measurements):
+            ParticleSet=normalize_weights(ParticleSet)
+            ParticleSet=resample_particles(ParticleSet,num_particles)
 
 
     ParticleSet=normalize_weights(ParticleSet)
@@ -395,11 +410,10 @@ precision=0.001
 err=0.05
 
 #Define the range for each dimension
-disp = 0
-x_min=-disp
-x_max=disp
-y_min=-disp
-y_max=disp
+x_min=-0.1
+x_max=0.1
+y_min=-0.1
+y_max=0.1
 theta_min=0 # math.pi/2-math.pi/12
 theta_max=0 #math.pi/2+math.pi/12
 

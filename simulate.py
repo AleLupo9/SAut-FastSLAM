@@ -73,11 +73,11 @@ plt.show()
 
 
 """
-n_turns = 2
+n_turns = 10
 turn_t = 30
 r_r = 3
 a_vel = 2*pi/turn_t
-dt = 0.1
+dt = 1
 max_reach = 3
 mu_xy = 0
 sigma_xy = 0
