@@ -13,8 +13,8 @@ def motion_model(particle):
     global linear_vel
     global angular_vel
     #Define noise
-    per_xy = 0.3
-    per_theta = 0.3
+    per_xy = 1
+    per_theta = 1
     mu_xy=0
     sigma_x=abs(linear_vel*dt*per_xy)
     sigma_y=abs(linear_vel*dt*per_xy)
@@ -369,7 +369,7 @@ def plot_poses_and_ellipses(landmarks_position, robot_positions, ParticleSet, id
     ax.scatter(ideal_x,ideal_y,color='green',label='Real path')
     
     #Plot the real robot path
-    ax.scatter(odom_x,odom_y,color='red',label='Odometry path')
+    # ax.scatter(odom_x,odom_y,color='red',label='Odometry path')
     
     weights=np.array([particle['weight'] for particle in ParticleSet])
     for i in range(len(landmark_x)):
@@ -404,18 +404,18 @@ def RSME_graphs(RSME_odom_list, RSME_slam_list,n_instances):
 
 #Some parameters to define, such as timestep, linear_vel and angular_vel
 n_turns = 10
-r = 3
-turn_t = 30
+r = 2*math.sqrt(2)
+turn_t = 40
 angular_vel=2*math.pi/turn_t
 linear_vel=r*math.sqrt(2*(1-math.cos(angular_vel*0.1)))/0.1
 precision=0.001
 err=0.05
 
 #Define the range for each dimension
-x_min=-0.1
-x_max=0.1
-y_min=-0.1
-y_max=0.1
+x_min=-0
+x_max=0
+y_min=-0
+y_max=0
 theta_min=0 # math.pi/2-math.pi/12
 theta_max=0 #math.pi/2+math.pi/12
 
@@ -450,7 +450,7 @@ noisy_positions=[]
 ideal_new_position=np.array([0,0,0])
 noisy_new_position=np.array([0,0,0])
 
-with open("simulation.json", "r") as file_json:
+with open("simulation_square.json", "r") as file_json:
     data = json.load(file_json)
     
     
@@ -471,7 +471,7 @@ for i in range(len(data)):
     measurements=[]
 
     if old_time == -1:
-        dt = 1
+        dt = 0.1
     else:
         current_time = data["obs"+str(i)]["time"]
         dt = current_time-old_time
