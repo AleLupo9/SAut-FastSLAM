@@ -298,7 +298,7 @@ def plot_robot_pose_and_landmarks(robot_positions, landmarks_pose):
     plt.xlabel('X')
     plt.ylabel('Y')
     plt.legend()
-    plt.savefig('SLAM.png')
+    plt.savefig('SLAM_sq_'+str(n_turns)+'_'+str(num_particles)+'.png')
     plt.clf()
 
 def plot_particles(Particle_Set, robot_position, ax, camera):
@@ -384,7 +384,7 @@ def plot_poses_and_ellipses(landmarks_position, robot_positions, ParticleSet, id
     plt.xlabel('X')
     plt.ylabel('Y')
     ax.legend()
-    plt.savefig('SLAM_Ellipses.png')
+    plt.savefig('SLAM_Ellipses_sq_'+str(n_turns)+'_'+str(num_particles)+'.png')
     plt.clf()
 
 
@@ -399,11 +399,13 @@ def RSME_graphs(RSME_odom_list, RSME_slam_list,n_instances):
     plt.xlabel("Nr of instances")
     plt.ylabel("RMSE(m)")
     plt.legend()
-    plt.savefig("RMSE.png")
+    plt.savefig('RMSE_sq_'+str(n_turns)+'_'+str(num_particles)+'.png')
     plt.clf()
 
 #Some parameters to define, such as timestep, linear_vel and angular_vel
-n_turns = 10
+global n_turns
+global num_particles
+n_turns = 5
 r = 2*math.sqrt(2)
 turn_t = 40
 angular_vel=2*math.pi/turn_t
@@ -416,11 +418,11 @@ x_min=-0
 x_max=0
 y_min=-0
 y_max=0
-theta_min=0 # math.pi/2-math.pi/12
-theta_max=0 #math.pi/2+math.pi/12
+theta_min=-math.pi/4 # math.pi/2-math.pi/12
+theta_max=-math.pi/4 #math.pi/2+math.pi/12
 
 #Initiate the ParticleSet:
-num_particles=100
+num_particles=500
 base_weight=1/num_particles
 #num_landmarks=5 #Put here the number of the landmarks. We should know their id and it should be by order.
 ParticleSet=[] #Holds each particle. Each particle is a dictionary that should have 'pose' and 'landmarks'.
@@ -451,7 +453,9 @@ ideal_new_position=np.array([0,0,0])
 noisy_new_position=np.array([0,0,0])
 
 with open("simulation_square.json", "r") as file_json:
-    data = json.load(file_json)
+    tot_data = json.load(file_json)
+data = tot_data[0]
+rob_data = tot_data[1]
     
     
 fig, ax = plt.subplots()
@@ -493,7 +497,7 @@ for i in range(len(data)):
     ParticleSet,pose_estimate, landmarks_pose = fastslam_kc(ParticleSet,num_particles, measurements)
     land_int.append(landmarks_pose)
     robot_positions.append(pose_estimate)
-    ideal_new_position=ideal_motion(ideal_new_position)
+    ideal_new_position=[rob_data["obs"+str(i)]["x"], rob_data["obs"+str(i)]["y"], rob_data["obs"+str(i)]["theta"]]
     noisy_new_position=noisy_motion(noisy_new_position)
     ideal_positions.append(ideal_new_position)
     noisy_positions.append(noisy_new_position)

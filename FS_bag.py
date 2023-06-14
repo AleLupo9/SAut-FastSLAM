@@ -450,12 +450,9 @@ noisy_positions=[]
 ideal_new_position=np.array([0,0,0])
 noisy_new_position=np.array([0,0,0])
 
-with open("simulation.json", "r") as file_json:
-    data = json.load(file_json)
-    
-    
-fig, ax = plt.subplots()
-camera = Camera(fig)
+bag_file='/home/alessandro/Downloads/ultimate.bag'
+bag=rosbag.Bag(bag_file)
+old_time = -1
 
 old_time = -1
 current_time=0
@@ -467,56 +464,54 @@ RSME_odom_list = []
 RSME_slam_list = []
 n_instances = []
 #Iterate over the messages in the bag file
-for i in range(len(data)):
+for topic, msg, t in bag.read_messages():
     measurements=[]
 
-    if old_time == -1:
-        dt = 1
-    else:
-        current_time = data["obs"+str(i)]["time"]
-        dt = current_time-old_time
-        old_time = current_time
+    if topic == '/fiducial_transforms':
+        for fiducial in msg.transforms:
+            fiducial_id = fiducial.fiducial_id
+            translation_x = fiducial.transform.translation.x
+            translation_y = fiducial.transform.translation.z
+            d=math.sqrt(translation_x**2+translation_y**2)
+            theta=pi_2_pi( math.atan2(translation_y,translation_x))
+            if old_time == -1:
+                dt = 1
+            else:
+                current_time = msg.header.stamp.secs
+                dt = current_time-old_time
+                old_time = current_time
 
-    for j in range(len(data["obs"+str(i)])-1):
-        print("postazione\n"+str(i)+"\n"+str(j))
-        fiducial_id = data["obs"+str(i)]["land"+str(j)]["id"]
-        translation_x = data["obs"+str(i)]["land"+str(j)]["x"]
-        translation_y = data["obs"+str(i)]["land"+str(j)]["y"]
-        d=math.sqrt(translation_x**2+translation_y**2)
-        theta=pi_2_pi( math.atan2(translation_y,translation_x))
+            #Add the landmark measurements to a variable. In this case we are not discarding the possibility of the robot detecting more than one aruco marker
+            measurements.append([fiducial_id,d,theta])
+            length=len(measurements)
         
-        #Add the landmark measurements to a variable. In this case we are not discarding the possibility of the robot detecting more than one aruco marker
-        measurements.append([fiducial_id,d,theta])
-        length=len(measurements)
-            
-        
-    ParticleSet,pose_estimate, landmarks_pose = fastslam_kc(ParticleSet,num_particles, measurements)
-    land_int.append(landmarks_pose)
-    robot_positions.append(pose_estimate)
-    ideal_new_position=ideal_motion(ideal_new_position)
-    noisy_new_position=noisy_motion(noisy_new_position)
-    ideal_positions.append(ideal_new_position)
-    noisy_positions.append(noisy_new_position)
+        ParticleSet, pose_estimate, landmarks_pose = fastslam_kc(ParticleSet,num_particles, measurements)
+        land_int.append(landmarks_pose)
+        robot_positions.append(pose_estimate)
+        ideal_new_position=ideal_motion(ideal_new_position)
+        noisy_new_position=noisy_motion(noisy_new_position)
+        ideal_positions.append(ideal_new_position)
+        noisy_positions.append(noisy_new_position)
 
 
-    #For each iteration of FastSLAM we are going to make an RSME that takes into account all the iterations done until the current iteration
-    counter +=1
-    sum_RSME_odom += (ideal_new_position[0]-noisy_new_position[0])**2 + (ideal_new_position[1]-noisy_new_position[1])**2
-    sum_RSME_slam += (ideal_new_position[0] - pose_estimate[0])**2 + (ideal_new_position[1] - pose_estimate[1])**2
-    RSME_odom= math.sqrt((sum_RSME_odom)/counter)
-    RSME_slam= math.sqrt((sum_RSME_slam)/counter)
-    #print(f"Counter: {counter}")
+        #For each iteration of FastSLAM we are going to make an RSME that takes into account all the iterations done until the current iteration
+        counter +=1
+        sum_RSME_odom += (ideal_new_position[0]-noisy_new_position[0])**2 + (ideal_new_position[1]-noisy_new_position[1])**2
+        sum_RSME_slam += (ideal_new_position[0] - pose_estimate[0])**2 + (ideal_new_position[1] - pose_estimate[1])**2
+        RSME_odom= math.sqrt((sum_RSME_odom)/counter)
+        RSME_slam= math.sqrt((sum_RSME_slam)/counter)
+        #print(f"Counter: {counter}")
 
-    n_instances.append(counter)
-    RSME_odom_list.append(RSME_odom)
-    RSME_slam_list.append(RSME_slam)
+        n_instances.append(counter)
+        RSME_odom_list.append(RSME_odom)
+        RSME_slam_list.append(RSME_slam)
 
-    plot_particles(ParticleSet, robot_positions, ax, camera)
+        # plot_particles(ParticleSet, robot_positions, ax, camera)
 
-plot_particles(ParticleSet, robot_positions, ax, camera)
+# plot_particles(ParticleSet, robot_positions, ax, camera)
 
-animation = camera.animate(interval=dt*100)  # Intervallo di tempo tra i frame (in millisecondi)
-plt.show()
+# animation = camera.animate(interval=dt*100)  # Intervallo di tempo tra i frame (in millisecondi)
+# plt.show()
 
 plot_robot_pose_and_landmarks(robot_positions,landmarks_pose)
 plot_poses_and_ellipses(landmarks_pose, robot_positions, ParticleSet, ideal_positions, noisy_positions)

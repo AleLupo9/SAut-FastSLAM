@@ -49,14 +49,15 @@ for i in range(n_land):
 
 n_turns = 5
 t_s = 10
-side = 3.8*sqrt(2)
+side = 3*sqrt(2)
 turn_t = 4*t_s
 l_vel = side/t_s
 dt = 0.1
-max_reach = 3
+max_reach = 4
 mu_xy = 0
 sigma_xy = 0
 data = {}
+data2 = {}
 
 robot = [-side/2, -side/2, 0]
 per = 0
@@ -72,6 +73,7 @@ for co in range(int(turn_t*n_turns/dt)):
     # scan
     # f.write("obs:"+str(co+1)+"\ntime:"+str((co+1)*dt)+"\n")
     data["obs"+str(co)] = {"time": (co+1)*dt}
+    data2["obs"+str(co)] = {"x": robot[0]+side/2, "y": robot[1]+side/2, "theta": robot[2]} 
     co2 = 0
     for i in range(n_land):
         if cone_detection(land_list[i], cone_angle, robot):
@@ -85,7 +87,6 @@ for co in range(int(turn_t*n_turns/dt)):
                 corr_x = x_oriented+np.random.normal(mu_xy,sigma_xy)
                 corr_y = y_oriented+np.random.normal(mu_xy,sigma_xy)
                 data["obs"+str(co)]["land"+str(co2)] = {"id": i, "x": corr_x, "y": corr_y, "err": sigma_xy}
-                
                 xp.append(land_list[i][0]) # land_list[i][0])
                 yp.append(land_list[i][1]) # land_list[i][1])
                 co2 += 1
@@ -121,10 +122,10 @@ for co in range(int(turn_t*n_turns/dt)):
 
     # camera.snap()
 
-
+tot_data = [data, data2]
 with open("simulation_square_strict.json", "w") as file_json:
-    json.dump(data, file_json)
+    json.dump(tot_data, file_json)
 
 #ax.scatter([land_list[i][0] for i in range(len(land_list))], [land_list[i][1] for i in range(len(land_list))], c="blue")
 #animation = camera.animate(interval=dt*100)  # Intervallo di tempo tra i frame (in millisecondi)
-plt.show()
+# plt.show()

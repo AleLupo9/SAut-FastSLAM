@@ -403,8 +403,7 @@ def RSME_graphs(RSME_odom_list, RSME_slam_list,n_instances):
     plt.clf()
 
 #Some parameters to define, such as timestep, linear_vel and angular_vel
-n_turns = 10
-r = 3.8*4*math.log(math.sqrt(2)+1)/math.pi
+r = 3*4*math.log(math.sqrt(2)+1)/math.pi
 turn_t = 40
 angular_vel=2*math.pi/turn_t
 linear_vel=r*math.sqrt(2*(1-math.cos(angular_vel*0.1)))/0.1
@@ -420,7 +419,7 @@ theta_min=0 # math.pi/2-math.pi/12
 theta_max=0 #math.pi/2+math.pi/12
 
 #Initiate the ParticleSet:
-num_particles=300
+num_particles=100
 base_weight=1/num_particles
 #num_landmarks=5 #Put here the number of the landmarks. We should know their id and it should be by order.
 ParticleSet=[] #Holds each particle. Each particle is a dictionary that should have 'pose' and 'landmarks'.
@@ -451,8 +450,9 @@ ideal_new_position=np.array([0,0,0])
 noisy_new_position=np.array([0,0,0])
 
 with open("simulation_square_strict.json", "r") as file_json:
-    data = json.load(file_json)
-    
+    tot_data = json.load(file_json)
+data = tot_data[0]
+rob_data = tot_data[1]
     
 fig, ax = plt.subplots()
 camera = Camera(fig)
@@ -493,7 +493,7 @@ for i in range(len(data)):
     ParticleSet,pose_estimate, landmarks_pose = fastslam_kc(ParticleSet,num_particles, measurements)
     land_int.append(landmarks_pose)
     robot_positions.append(pose_estimate)
-    ideal_new_position=ideal_motion(ideal_new_position)
+    ideal_new_position=[rob_data["obs"+str(i)]["x"], rob_data["obs"+str(i)]["y"], rob_data["obs"+str(i)]["theta"]]
     noisy_new_position=noisy_motion(noisy_new_position)
     ideal_positions.append(ideal_new_position)
     noisy_positions.append(noisy_new_position)

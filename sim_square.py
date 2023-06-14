@@ -72,7 +72,7 @@ for i in range(n_land):
     land_list.append(landmark)
 
 
-n_turns = 2
+n_turns = 5
 t_s = 10
 side = 4
 turn_t = 4*t_s
@@ -82,6 +82,7 @@ max_reach = 3
 mu_xy = 0
 sigma_xy = 0
 data = {}
+data2 = {}
 
 robot = [-side/2, -side/2, -pi/4]
 per = 0
@@ -98,6 +99,7 @@ for co in range(int(turn_t*n_turns/dt)):
     # scan
     # f.write("obs:"+str(co+1)+"\ntime:"+str((co+1)*dt)+"\n")
     data["obs"+str(co)] = {"time": (co+1)*dt}
+    data2["obs"+str(co)] = {"x": robot[0]+side/2, "y": robot[1]+side/2, "theta": robot[2]} 
     co2 = 0
     for i in range(n_land):
         if cone_detection(land_list[i], cone_angle, robot):
@@ -136,9 +138,9 @@ for co in range(int(turn_t*n_turns/dt)):
 
     #camera.snap()
 
-
+tot_data = [data, data2]
 with open("simulation_square.json", "w") as file_json:
-    json.dump(data, file_json)
+    json.dump(tot_data, file_json)
 
 #animation = camera.animate(interval=dt*100)  # Intervallo di tempo tra i frame (in millisecondi)
 #plt.show()
