@@ -84,10 +84,7 @@ ax.legend(bbox_to_anchor=(1.05, 1.0))
 plt.tight_layout()
 plt.show()
 
-
-
-
-n_turns = 1
+n_turns = 5
 turn_t = 30
 r_r = 2.5
 a_vel = 2*pi/turn_t
@@ -96,6 +93,7 @@ max_reach = 3
 mu_xy = 0
 sigma_xy = 0
 data = {}
+data2 = {}
 
 robot = [r_r, 0, 0]
 a_abs = atan2(robot[1], robot[0])
@@ -110,6 +108,7 @@ for co in range(int(turn_t*n_turns/dt)):
     # scan
     # f.write("obs:"+str(co+1)+"\ntime:"+str((co+1)*dt)+"\n")
     data["obs"+str(co)] = {"time": (co+1)*dt}
+    data2["obs"+str(co)] = {"x": robot[0]-r_r, "y": robot[1], "theta": robot[2]} 
     co2 = 0
     for i in range(n_land):
         if cone_detection(land_list[i], cone_angle, robot):
@@ -142,9 +141,9 @@ for co in range(int(turn_t*n_turns/dt)):
     ax.scatter(xp, yp, c='blue')
     camera.snap()
 
-# f.close()
+tot_data = [data, data2]
 with open("simulation.json", "w") as file_json:
-    json.dump(data, file_json)
+    json.dump(tot_data, file_json)
 
 animation = camera.animate(interval=dt*100)  # Intervallo di tempo tra i frame (in millisecondi)
 plt.show()

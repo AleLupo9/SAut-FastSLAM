@@ -237,7 +237,7 @@ def plot_robot_pose_and_landmarks(robot_positions, landmarks_pose):
     plt.clf()
 
 #Some parameters to define, such as timestep, linear_vel and angular_vel
-n_turns = 20
+n_turns = 5
 r = 2
 turn_t = 50
 angular_vel=2*math.pi/turn_t
