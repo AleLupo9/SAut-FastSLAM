@@ -38,46 +38,60 @@ def cone_detection(land, angle, pos):
             return False
 
 cone_angle = pi/3
-n_land = 30
+n_land = 20
 r_l = 4
 land_list = []
-# landmark = x, y
-# land_list[id][coord]
+#landmark = x, y
+#land_list[id][coord]
 
 for i in range(n_land):
     landmark = [r_l*cos(2*pi*i/n_land), r_l*sin(2*pi*i/n_land)]
     land_list.append(landmark)
 
-"""
-#x_land = [land_list[i][0] for i in range(n_land)]
-#y_land = [land_list[i][1] for i in range(n_land)]
-#plt.scatter(x_land, y_land)
-#plt.show()
-# robot = [x, y, theta]
-"""
-"""
-robot = [0, 2, pi]
+""""""
+"""""
+x_land = [land_list[i][0] for i in range(n_land)]
+y_land = [land_list[i][1] for i in range(n_land)]
+plt.scatter(x_land, y_land)
+plt.show()
+robot = [x, y, theta]
 
+"""
+robot = [0, 2.5, pi]
+land_det_x=[]
+land_det_y=[]
+land_not_det=[]
+land_not_det_x=[]
+land_not_det_y=[]
 mu_xy = 0
-sigma_xy = 0.05
-
+sigma_xy = 0.2
+fig, ax = plt.subplots()
 for i in range(n_land):
     if cone_detection(land_list[i], cone_angle, robot):
         corr_x = land_list[i][0]+np.random.normal(mu_xy,sigma_xy)
         corr_y = land_list[i][1]+np.random.normal(mu_xy,sigma_xy)
-        plt.scatter(corr_x, corr_y, c='blue')
+        land_det_x.append(corr_x)
+        land_det_y.append(corr_y)
     else:
-        plt.scatter(land_list[i][0], land_list[i][1], c='green')
-plt.scatter(robot[0], robot[1], c='red')
+        land_not_det_x.append(land_list[i][0])
+        land_not_det_y.append(land_list[i][1])
+        
+ax.scatter(land_det_x, land_det_y, c='blue', label="Landmarks seen by the robot")
+ax.scatter(robot[0], robot[1], c='red', label="Robot position")
+ax.scatter(land_not_det_x, land_not_det_y, c='green', label="Landmarks not seen by the robot")
+
+ax.legend(bbox_to_anchor=(1.05, 1.0))
+plt.tight_layout()
 plt.show()
 
 
-"""
-n_turns = 10
+
+
+n_turns = 1
 turn_t = 30
-r_r = 3
+r_r = 2.5
 a_vel = 2*pi/turn_t
-dt = 1
+dt = 0.1
 max_reach = 3
 mu_xy = 0
 sigma_xy = 0
