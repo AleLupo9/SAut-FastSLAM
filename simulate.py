@@ -108,7 +108,7 @@ for co in range(int(turn_t*n_turns/dt)):
     # scan
     # f.write("obs:"+str(co+1)+"\ntime:"+str((co+1)*dt)+"\n")
     data["obs"+str(co)] = {"time": (co+1)*dt}
-    data2["obs"+str(co)] = {"x": robot[0]-r_r, "y": robot[1], "theta": robot[2]} 
+    data2["obs"+str(co)] = {"x": robot[1], "y": r_r-robot[0], "theta": robot[2]-pi/2} 
     co2 = 0
     for i in range(n_land):
         if cone_detection(land_list[i], cone_angle, robot):
