@@ -430,7 +430,7 @@ theta_min=-math.pi/4 # math.pi/2-math.pi/12
 theta_max=-math.pi/4 #math.pi/2+math.pi/12
 
 #Initiate the ParticleSet:
-num_particles=500
+num_particles=1000
 base_weight=1/num_particles
 #num_landmarks=5 #Put here the number of the landmarks. We should know their id and it should be by order.
 ParticleSet=[] #Holds each particle. Each particle is a dictionary that should have 'pose' and 'landmarks'.
