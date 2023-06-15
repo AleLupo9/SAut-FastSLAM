@@ -1,6 +1,5 @@
 import numpy as np
 import math
-from math import cos, sin, tan, atan2, sqrt, pow
 import random
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
@@ -14,8 +13,8 @@ def motion_model(particle):
     global linear_vel
     global angular_vel
     #Define noise
-    per_xy = 0.5
-    per_theta = 0.5
+    per_xy = 0.3
+    per_theta = 0.3
     mu_xy=0
     sigma_x=abs(linear_vel*dt*per_xy)
     sigma_y=abs(linear_vel*dt*per_xy)
@@ -41,15 +40,12 @@ def motion_model(particle):
     return particle
 
 def noisy_motion(noisy_position):
-    per_xy = 0.5
-    per_theta = 0.5
     mu_xy=0
-    sigma_x=abs(linear_vel*dt*per_xy)
-    sigma_y=abs(linear_vel*dt*per_xy)
+    sigma_xy=0.05
     mu_theta=0
-    sigma_theta=abs(angular_vel*dt*per_theta)
-    noise_x = np.random.normal(mu_xy,sigma_x)
-    noise_y = np.random.normal(mu_xy,sigma_y)
+    sigma_theta=0.05
+    noise_x = np.random.normal(mu_xy,sigma_xy)
+    noise_y = np.random.normal(mu_xy,sigma_xy)
     noise_theta=np.random.normal(mu_theta,sigma_theta)
     
     matrixA=np.array([[1,0,0],
@@ -345,7 +341,7 @@ def plot_confidence_ellipse(ax, landmark_position, landmark_cov, n_std=1.0):
     ellipse.set_transform(transf + ax.transData)
     return ax.add_patch(ellipse)    
     
-def plot_poses_and_ellipses(landmarks_position, robot_positions, ParticleSet, ideal_positions, noisy_positions, land_list):
+def plot_poses_and_ellipses(landmarks_position, robot_positions, ParticleSet, ideal_positions, noisy_positions):
     fig, ax = plt.subplots()
     #Extract correctly the robot's positions (over all time -> Path for FASTSLAM)
     robot_x=[robot_positions[i][0] for i in range(len(robot_positions))]
@@ -363,13 +359,6 @@ def plot_poses_and_ellipses(landmarks_position, robot_positions, ParticleSet, id
     odom_x=[noisy_positions[i][0] for i in range(len(noisy_positions))]
     odom_y=[noisy_positions[i][1] for i in range(len(noisy_positions))]
     
-    #Extract correctly the real position of the landmarks 
-    real_land_x=[land_list[i][0] for i in range(len(land_list))]
-    real_land_y=[land_list[i][1] for i in range(len(land_list))]
-
-    #Plot the landmark real position
-    ax.scatter(real_land_x,real_land_y, marker="x", color="purple", label="Real landmarks")
-
     #Plot the robot's position
     ax.scatter(robot_x,robot_y,color='blue', label='Robot Path for FASTSLAM')
 
@@ -380,7 +369,7 @@ def plot_poses_and_ellipses(landmarks_position, robot_positions, ParticleSet, id
     ax.scatter(ideal_x,ideal_y,color='green',label='Real path')
     
     #Plot the real robot path
-    #ax.scatter(odom_x,odom_y,color='red',label='Odometry path')
+    ax.scatter(odom_x,odom_y,color='red',label='Odometry path')
     
     weights=np.array([particle['weight'] for particle in ParticleSet])
     for i in range(len(landmark_x)):
@@ -394,8 +383,7 @@ def plot_poses_and_ellipses(landmarks_position, robot_positions, ParticleSet, id
     #Add labels
     plt.xlabel('X')
     plt.ylabel('Y')
-    ax.legend(bbox_to_anchor=(1.05, 1.0))
-    plt.tight_layout()
+    ax.legend()
     plt.savefig('SLAM_Ellipses.png')
     plt.clf()
 
@@ -415,8 +403,8 @@ def RSME_graphs(RSME_odom_list, RSME_slam_list,n_instances):
     plt.clf()
 
 #Some parameters to define, such as timestep, linear_vel and angular_vel
-n_turns = 7
-r = 2.5
+n_turns = 10
+r = 3
 turn_t = 30
 angular_vel=2*math.pi/turn_t
 linear_vel=r*math.sqrt(2*(1-math.cos(angular_vel*0.1)))/0.1
@@ -424,15 +412,15 @@ precision=0.001
 err=0.05
 
 #Define the range for each dimension
-x_min=-0.2
-x_max=0.2
-y_min=-0.2
-y_max=0.2
+x_min=-0.1
+x_max=0.1
+y_min=-0.1
+y_max=0.1
 theta_min=0 # math.pi/2-math.pi/12
 theta_max=0 #math.pi/2+math.pi/12
 
 #Initiate the ParticleSet:
-num_particles=500
+num_particles=100
 base_weight=1/num_particles
 #num_landmarks=5 #Put here the number of the landmarks. We should know their id and it should be by order.
 ParticleSet=[] #Holds each particle. Each particle is a dictionary that should have 'pose' and 'landmarks'.
@@ -462,25 +450,9 @@ noisy_positions=[]
 ideal_new_position=np.array([0,0,0])
 noisy_new_position=np.array([0,0,0])
 
-#in the simulation we know the real position of the landmarks so we can put them in the plot with ellipses
-n_land=20
-r_l = 4
-land_list = []
-# landmark = x, y
-# land_list[id][coord]
-
-for i in range(n_land):
-    landmark = [r_l*cos(2*math.pi*i/n_land), 2.5+r_l*sin(2*math.pi*i/n_land)]
-    land_list.append(landmark)
-
-
-
-with open("simulation.json", "r") as file_json:
-    data = json.load(file_json)
-    
-    
-fig, ax = plt.subplots()
-camera = Camera(fig)
+bag_file='/home/alessandro/Downloads/ultimate.bag'
+bag=rosbag.Bag(bag_file)
+old_time = -1
 
 old_time = -1
 current_time=0
@@ -492,59 +464,57 @@ RSME_odom_list = []
 RSME_slam_list = []
 n_instances = []
 #Iterate over the messages in the bag file
-for i in range(len(data)):
+for topic, msg, t in bag.read_messages():
     measurements=[]
 
-    if old_time == -1:
-        dt = 1
-    else:
-        current_time = data["obs"+str(i)]["time"]
-        dt = current_time-old_time
-        old_time = current_time
+    if topic == '/fiducial_transforms':
+        for fiducial in msg.transforms:
+            fiducial_id = fiducial.fiducial_id
+            translation_x = fiducial.transform.translation.x
+            translation_y = fiducial.transform.translation.z
+            d=math.sqrt(translation_x**2+translation_y**2)
+            theta=pi_2_pi( math.atan2(translation_y,translation_x))
+            if old_time == -1:
+                dt = 1
+            else:
+                current_time = msg.header.stamp.secs
+                dt = current_time-old_time
+                old_time = current_time
 
-    for j in range(len(data["obs"+str(i)])-1):
-        print("postazione\n"+str(i)+"\n"+str(j))
-        fiducial_id = data["obs"+str(i)]["land"+str(j)]["id"]
-        translation_x = data["obs"+str(i)]["land"+str(j)]["x"]
-        translation_y = data["obs"+str(i)]["land"+str(j)]["y"]
-        d=math.sqrt(translation_x**2+translation_y**2)
-        theta=pi_2_pi( math.atan2(translation_y,translation_x))
+            #Add the landmark measurements to a variable. In this case we are not discarding the possibility of the robot detecting more than one aruco marker
+            measurements.append([fiducial_id,d,theta])
+            length=len(measurements)
         
-        #Add the landmark measurements to a variable. In this case we are not discarding the possibility of the robot detecting more than one aruco marker
-        measurements.append([fiducial_id,d,theta])
-        length=len(measurements)
-            
-        
-    ParticleSet,pose_estimate, landmarks_pose = fastslam_kc(ParticleSet,num_particles, measurements)
-    land_int.append(landmarks_pose)
-    robot_positions.append(pose_estimate)
-    ideal_new_position=ideal_motion(ideal_new_position)
-    noisy_new_position=noisy_motion(noisy_new_position)
-    ideal_positions.append(ideal_new_position)
-    noisy_positions.append(noisy_new_position)
+        ParticleSet, pose_estimate, landmarks_pose = fastslam_kc(ParticleSet,num_particles, measurements)
+        land_int.append(landmarks_pose)
+        robot_positions.append(pose_estimate)
+        ideal_new_position=ideal_motion(ideal_new_position)
+        noisy_new_position=noisy_motion(noisy_new_position)
+        ideal_positions.append(ideal_new_position)
+        noisy_positions.append(noisy_new_position)
 
 
-    #For each iteration of FastSLAM we are going to make an RSME that takes into account all the iterations done until the current iteration
-    counter +=1
-    sum_RSME_odom += (ideal_new_position[0]-noisy_new_position[0])**2 + (ideal_new_position[1]-noisy_new_position[1])**2
-    sum_RSME_slam += (ideal_new_position[0] - pose_estimate[0])**2 + (ideal_new_position[1] - pose_estimate[1])**2
-    RSME_odom= math.sqrt((sum_RSME_odom)/counter)
-    RSME_slam= math.sqrt((sum_RSME_slam)/counter)
-    #print(f"Counter: {counter}")
+        #For each iteration of FastSLAM we are going to make an RSME that takes into account all the iterations done until the current iteration
+        counter +=1
+        sum_RSME_odom += (ideal_new_position[0]-noisy_new_position[0])**2 + (ideal_new_position[1]-noisy_new_position[1])**2
+        sum_RSME_slam += (ideal_new_position[0] - pose_estimate[0])**2 + (ideal_new_position[1] - pose_estimate[1])**2
+        RSME_odom= math.sqrt((sum_RSME_odom)/counter)
+        RSME_slam= math.sqrt((sum_RSME_slam)/counter)
+        #print(f"Counter: {counter}")
 
-    n_instances.append(counter)
-    RSME_odom_list.append(RSME_odom)
-    RSME_slam_list.append(RSME_slam)
+        n_instances.append(counter)
+        RSME_odom_list.append(RSME_odom)
+        RSME_slam_list.append(RSME_slam)
 
-    plot_particles(ParticleSet, robot_positions, ax, camera)
+        # plot_particles(ParticleSet, robot_positions, ax, camera)
 
-plot_particles(ParticleSet, robot_positions, ax, camera)
+# plot_particles(ParticleSet, robot_positions, ax, camera)
 
-animation = camera.animate(interval=dt*100)  # Intervallo di tempo tra i frame (in millisecondi)
-plt.show()
+# animation = camera.animate(interval=dt*100)  # Intervallo di tempo tra i frame (in millisecondi)
+# plt.show()
 
 plot_robot_pose_and_landmarks(robot_positions,landmarks_pose)
-plot_poses_and_ellipses(landmarks_pose, robot_positions, ParticleSet, ideal_positions, noisy_positions, land_list)
+plot_poses_and_ellipses(landmarks_pose, robot_positions, ParticleSet, ideal_positions, noisy_positions)
 RSME_graphs(RSME_odom_list,RSME_slam_list,n_instances)
 
 #plt.figure(1)
