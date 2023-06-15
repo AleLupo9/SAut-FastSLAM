@@ -298,7 +298,7 @@ def plot_robot_pose_and_landmarks(robot_positions, landmarks_pose):
     plt.xlabel('X')
     plt.ylabel('Y')
     plt.legend()
-    plt.savefig('SLAM.png')
+    plt.savefig('SLAM_ssq_'+str(n_turns)+'_'+str(num_particles)+'.png')
     plt.clf()
 
 def plot_particles(Particle_Set, robot_position, ax, camera):
@@ -384,7 +384,7 @@ def plot_poses_and_ellipses(landmarks_position, robot_positions, ParticleSet, id
     plt.xlabel('X')
     plt.ylabel('Y')
     ax.legend()
-    plt.savefig('SLAM_Ellipses.png')
+    plt.savefig('SLAM_Ellipses_ssq_'+str(n_turns)+'_'+str(num_particles)+'.png')
     plt.clf()
 
 
@@ -399,10 +399,13 @@ def RSME_graphs(RSME_odom_list, RSME_slam_list,n_instances):
     plt.xlabel("Nr of instances")
     plt.ylabel("RMSE(m)")
     plt.legend()
-    plt.savefig("RMSE.png")
+    plt.savefig("RMSE_ssq_'+str(n_turns)+'_'+str(num_particles)+'.png")
     plt.clf()
 
 #Some parameters to define, such as timestep, linear_vel and angular_vel
+global n_turns
+global num_particles
+n_turns = 5
 r = 3*4*math.log(math.sqrt(2)+1)/math.pi
 turn_t = 40
 angular_vel=2*math.pi/turn_t
@@ -419,7 +422,7 @@ theta_min=0 # math.pi/2-math.pi/12
 theta_max=0 #math.pi/2+math.pi/12
 
 #Initiate the ParticleSet:
-num_particles=100
+num_particles=500
 base_weight=1/num_particles
 #num_landmarks=5 #Put here the number of the landmarks. We should know their id and it should be by order.
 ParticleSet=[] #Holds each particle. Each particle is a dictionary that should have 'pose' and 'landmarks'.
