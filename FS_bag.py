@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 import matplotlib.transforms as transforms
 import json
-from celluloid import Camera
+import cv2
+import rosbag
 
 def motion_model(particle):
     #Implement the motion model to predict next position
@@ -13,8 +14,8 @@ def motion_model(particle):
     global linear_vel
     global angular_vel
     #Define noise
-    per_xy = 0.3
-    per_theta = 0.3
+    per_xy = 0.05
+    per_theta = 0.05
     mu_xy=0
     sigma_x=abs(linear_vel*dt*per_xy)
     sigma_y=abs(linear_vel*dt*per_xy)
@@ -369,7 +370,7 @@ def plot_poses_and_ellipses(landmarks_position, robot_positions, ParticleSet, id
     ax.scatter(ideal_x,ideal_y,color='green',label='Real path')
     
     #Plot the real robot path
-    ax.scatter(odom_x,odom_y,color='red',label='Odometry path')
+    # ax.scatter(odom_x,odom_y,color='red',label='Odometry path')
     
     weights=np.array([particle['weight'] for particle in ParticleSet])
     for i in range(len(landmark_x)):
@@ -389,7 +390,7 @@ def plot_poses_and_ellipses(landmarks_position, robot_positions, ParticleSet, id
 
 
 def RSME_graphs(RSME_odom_list, RSME_slam_list,n_instances):
-    print(n_instances)
+    # print(n_instances)
     #Plot the noisy graph first
     plt.plot(n_instances,RSME_odom_list,color='red', label="Noisy model")
     #Now add the FastSLAM data
@@ -403,24 +404,24 @@ def RSME_graphs(RSME_odom_list, RSME_slam_list,n_instances):
     plt.clf()
 
 #Some parameters to define, such as timestep, linear_vel and angular_vel
-n_turns = 10
-r = 3
-turn_t = 30
+n_turns = 5
+r = 0.45
+turn_t = 269.162885/n_turns
 angular_vel=2*math.pi/turn_t
-linear_vel=r*math.sqrt(2*(1-math.cos(angular_vel*0.1)))/0.1
+linear_vel=r*angular_vel*math.cos(angular_vel*0.1)
 precision=0.001
 err=0.05
 
 #Define the range for each dimension
-x_min=-0.1
-x_max=0.1
-y_min=-0.1
-y_max=0.1
+x_min=0
+x_max=0
+y_min=0
+y_max=0
 theta_min=0 # math.pi/2-math.pi/12
 theta_max=0 #math.pi/2+math.pi/12
 
 #Initiate the ParticleSet:
-num_particles=100
+num_particles=10000
 base_weight=1/num_particles
 #num_landmarks=5 #Put here the number of the landmarks. We should know their id and it should be by order.
 ParticleSet=[] #Holds each particle. Each particle is a dictionary that should have 'pose' and 'landmarks'.
@@ -450,7 +451,7 @@ noisy_positions=[]
 ideal_new_position=np.array([0,0,0])
 noisy_new_position=np.array([0,0,0])
 
-bag_file='/home/alessandro/Downloads/ultimate.bag'
+bag_file='/media/acsdc/Kingston/newbag.bag'
 bag=rosbag.Bag(bag_file)
 old_time = -1
 
@@ -485,6 +486,7 @@ for topic, msg, t in bag.read_messages():
             measurements.append([fiducial_id,d,theta])
             length=len(measurements)
         
+
         ParticleSet, pose_estimate, landmarks_pose = fastslam_kc(ParticleSet,num_particles, measurements)
         land_int.append(landmarks_pose)
         robot_positions.append(pose_estimate)

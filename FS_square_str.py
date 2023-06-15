@@ -399,7 +399,7 @@ def RSME_graphs(RSME_odom_list, RSME_slam_list,n_instances):
     plt.xlabel("Nr of instances")
     plt.ylabel("RMSE(m)")
     plt.legend()
-    plt.savefig("RMSE_ssq_'+str(n_turns)+'_'+str(num_particles)+'.png")
+    plt.savefig('RMSE_ssq_'+str(n_turns)+'_'+str(num_particles)+'.png')
     plt.clf()
 
 #Some parameters to define, such as timestep, linear_vel and angular_vel
