@@ -402,6 +402,14 @@ def RSME_graphs(RSME_odom_list, RSME_slam_list,n_instances):
     plt.savefig('RMSE_sq_'+str(n_turns)+'_'+str(num_particles)+'.png')
     plt.clf()
 
+    plt.plot(n_instances,RSME_slam_list,color='green', label="FastSLAM")
+    plt.xlabel("Nr of instances")
+    plt.ylabel("RMSE(m)")
+    plt.legend()
+    plt.savefig('RMSE2_sq_'+str(n_turns)+'_'+str(num_particles)+'.png')
+    plt.clf()
+
+
 #Some parameters to define, such as timestep, linear_vel and angular_vel
 global n_turns
 global num_particles
@@ -519,8 +527,9 @@ for i in range(len(data)):
 
 plot_particles(ParticleSet, robot_positions, ax, camera)
 
-animation = camera.animate(interval=dt*100)  # Intervallo di tempo tra i frame (in millisecondi)
-plt.show()
+# animation = camera.animate(interval=dt*100)  # Intervallo di tempo tra i frame (in millisecondi)
+# plt.show()
+plt.clf()
 
 plot_robot_pose_and_landmarks(robot_positions,landmarks_pose)
 plot_poses_and_ellipses(landmarks_pose, robot_positions, ParticleSet, ideal_positions, noisy_positions)
