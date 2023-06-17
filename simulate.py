@@ -91,7 +91,7 @@ a_vel = 2*pi/turn_t
 dt = 0.1
 max_reach = 3
 mu_xy = 0
-sigma_xy = 0
+sigma_xy = 0.5
 data = {}
 data2 = {}
 

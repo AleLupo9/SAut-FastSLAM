@@ -12,15 +12,12 @@ def motion_model(particle):
     #Implement the motion model to predict next position
     #We will assume a constant velocity + noise approach
     global linear_vel
-    global angular_vel
     #Define noise
-    per_xy = 0.5
-    per_theta = 0.5
     mu_xy=0
-    sigma_x=abs(linear_vel*dt*per_xy)
-    sigma_y=abs(linear_vel*dt*per_xy)
+    sigma_x=0.2
+    sigma_y=0.2
     mu_theta=0
-    sigma_theta=abs(angular_vel*dt*per_theta)
+    sigma_theta=0.5
     noise_x = np.random.normal(mu_xy,sigma_x)
     noise_y = np.random.normal(mu_xy,sigma_y)
     noise_theta=np.random.normal(mu_theta,sigma_theta)
@@ -28,9 +25,9 @@ def motion_model(particle):
     matrixA=np.array([[1,0,0],
                       [0,1,0],
                       [0,0,1]])
-    arrayB=np.array([linear_vel*dt*math.cos(particle['pose'][2]+math.pi/200),
-                     linear_vel*dt*math.sin(particle['pose'][2]+math.pi/200),
-                     angular_vel*dt])
+    arrayB=np.array([linear_vel*dt*math.cos(particle['pose'][2]),
+                     linear_vel*dt*math.sin(particle['pose'][2]),
+                     0])
     arrayNoise=np.array([noise_x,noise_y,noise_theta])
     #Update the new position
     pose_array=np.array(particle['pose'])#Turns the pose of the particle into an array for matrix multiplication
@@ -41,13 +38,11 @@ def motion_model(particle):
     return particle
 
 def noisy_motion(noisy_position):
-    per_xy = 0.5
-    per_theta = 0.5
     mu_xy=0
-    sigma_x=abs(linear_vel*dt*per_xy)
-    sigma_y=abs(linear_vel*dt*per_xy)
+    sigma_x=0.2
+    sigma_y=0.2
     mu_theta=0
-    sigma_theta=abs(angular_vel*dt*per_theta)
+    sigma_theta=0.5
     noise_x = np.random.normal(mu_xy,sigma_x)
     noise_y = np.random.normal(mu_xy,sigma_y)
     noise_theta=np.random.normal(mu_theta,sigma_theta)
@@ -57,7 +52,7 @@ def noisy_motion(noisy_position):
                       [0,0,1]])
     arrayB=np.array([linear_vel*dt*math.cos(noisy_position[2]+math.pi/200),
                      linear_vel*dt*math.sin(noisy_position[2]+math.pi/200),
-                     angular_vel*dt])
+                     0])
     arrayNoise=np.array([noise_x,noise_y,noise_theta])
     noisy_new_pose= matrixA @ noisy_position + arrayB+ arrayNoise
     return noisy_new_pose
@@ -69,7 +64,7 @@ def ideal_motion(ideal_position):
                       [0,0,1]])
     arrayB=np.array([linear_vel*dt*math.cos(ideal_position[2]+math.pi/200),
                      linear_vel*dt*math.sin(ideal_position[2]+math.pi/200),
-                     angular_vel*dt])
+                     0])
     ideal_new_pose= matrixA @ ideal_position + arrayB
     return ideal_new_pose
 
@@ -424,11 +419,7 @@ def RSME_graphs(RSME_odom_list, RSME_slam_list,n_instances):
 #Some parameters to define, such as timestep, linear_vel and angular_vel
 global num_particles
 global err
-n_turns = 5
-r = 2.5
-turn_t = 30
-angular_vel=2*math.pi/turn_t
-linear_vel=r*math.sqrt(2*(1-math.cos(angular_vel*0.1)))/0.1
+linear_vel= 2*4*math.pi/30
 precision=0.001
 err=0.05
 
@@ -441,7 +432,7 @@ theta_min=0 # math.pi/2-math.pi/12
 theta_max=0 #math.pi/2+math.pi/12
 
 #Initiate the ParticleSet:
-num_particles=202
+num_particles=100
 base_weight=1/num_particles
 #num_landmarks=5 #Put here the number of the landmarks. We should know their id and it should be by order.
 ParticleSet=[] #Holds each particle. Each particle is a dictionary that should have 'pose' and 'landmarks'.
@@ -484,7 +475,7 @@ for i in range(n_land):
 
 
 
-with open("simulation.json", "r") as file_json:
+with open("simulation_com.json", "r") as file_json:
     tot_data = json.load(file_json)
 
 data = tot_data[0]
